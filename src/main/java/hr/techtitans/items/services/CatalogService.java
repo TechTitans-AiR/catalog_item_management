@@ -37,8 +37,8 @@ public class CatalogService {
         LocalDateTime currentDateTime = LocalDateTime.now();
 
         catalog.setName(name);
-        catalog.setArticle(articleIds);
-        catalog.setService(serviceIds);
+        catalog.setArticles(articleIds);
+        catalog.setServices(serviceIds);
         catalog.setUsers(userIds);
         catalog.setDate_created(currentDateTime);
         catalog.setDate_modified(currentDateTime);

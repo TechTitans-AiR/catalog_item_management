@@ -22,9 +22,9 @@ public class Catalog {
 
     private String name;
 
-    private List<ObjectId> article;
+    private List<ObjectId> articles;
 
-    private List<ObjectId> service;
+    private List<ObjectId> services;
 
     private List<ObjectId> users;
 
