@@ -42,4 +42,7 @@ public class Item {
     public ItemCategories getItemCategory(ItemCategoriesRepository itemCategoriesRepository) {
         return itemCategoriesRepository.findById(itemCategory).orElse(null);
     }
+
+
+
 }

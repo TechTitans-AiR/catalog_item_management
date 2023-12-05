@@ -8,5 +8,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ServiceRepository extends MongoRepository<Service, ObjectId> {
-    void deleteById(ObjectId id);
 }
