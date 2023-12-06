@@ -1,6 +1,7 @@
 package hr.techtitans.items.models;
 
 
+import hr.techtitans.items.dtos.ItemDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
