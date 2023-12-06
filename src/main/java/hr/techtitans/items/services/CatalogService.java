@@ -1,6 +1,10 @@
 package hr.techtitans.items.services;
 
+import hr.techtitans.items.dtos.CatalogDto;
+import hr.techtitans.items.dtos.ItemDto;
 import hr.techtitans.items.models.Catalog;
+import hr.techtitans.items.models.Item;
+import hr.techtitans.items.models.ItemCategories;
 import hr.techtitans.items.repositories.CatalogRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CatalogService {
@@ -45,5 +50,23 @@ public class CatalogService {
 
         catalogRepository.insert(catalog);
         return new ResponseEntity<>("Catalog created successfully", HttpStatus.CREATED);
+    }
+
+    public List<CatalogDto> allCatalogs(){
+        List<Catalog> catalogs = catalogRepository.findAll();
+        return catalogs.stream().map(this::mapToCatalogDto).collect(Collectors.toList());
+
+    }
+
+    private CatalogDto mapToCatalogDto(Catalog catalog){
+        return new CatalogDto(
+                catalog.getId(),
+                catalog.getName(),
+                catalog.getArticles(),
+                catalog.getServices(),
+                catalog.getUsers(),
+                catalog.getDate_created(),
+                catalog.getDate_modified()
+        );
     }
 }
