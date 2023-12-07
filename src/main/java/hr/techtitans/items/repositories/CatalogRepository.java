@@ -5,4 +5,5 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface CatalogRepository extends MongoRepository<Catalog, ObjectId> {
+    Catalog findByUsersContains(ObjectId userId);
 }

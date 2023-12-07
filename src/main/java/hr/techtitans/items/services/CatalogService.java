@@ -69,4 +69,35 @@ public class CatalogService {
                 catalog.getDate_modified()
         );
     }
+
+    public class BadRequestException extends RuntimeException {
+        public BadRequestException(String message) {
+            super(message);
+        }
+    }
+
+    public class NotFoundException extends RuntimeException {
+        public NotFoundException(String message) {
+            super(message);
+        }
+    }
+
+
+    public CatalogDto getCatalogByUserId(String userId) {
+        try {
+            ObjectId objectId = new ObjectId(userId);
+            Catalog catalog = catalogRepository.findByUsersContains(objectId);
+
+            if (catalog != null) {
+                return mapToCatalogDto(catalog);
+            } else {
+                // Handle case when catalog is not found
+                throw new NotFoundException("Catalog not found for user with ID: " + userId);
+            }
+        } catch (IllegalArgumentException e) {
+            // Handle case when user ID is not valid
+            throw new BadRequestException("Invalid user ID: " + userId);
+        }
+    }
+
 }

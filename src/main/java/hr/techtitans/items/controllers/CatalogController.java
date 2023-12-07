@@ -29,5 +29,21 @@ public class CatalogController {
         return new ResponseEntity<List<CatalogDto>>(catalogService.allCatalogs(), HttpStatus.OK);
     }
 
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getCatalogByUser(@PathVariable String userId) {
+        try {
+            // Your logic to retrieve the catalog based on the user ID
+            CatalogDto catalog = catalogService.getCatalogByUserId(userId);
+
+            if (catalog != null) {
+                return new ResponseEntity<>(catalog, HttpStatus.OK);
+            } else {
+                String errorMessage = "Catalog not found for user with ID: " + userId;
+                return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }
