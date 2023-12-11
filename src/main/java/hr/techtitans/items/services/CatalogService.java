@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -69,6 +70,19 @@ public class CatalogService {
                 catalog.getDate_modified()
         );
     }
+    private List<CatalogDto> mapToCatalogDtoList(List<Catalog> catalogs) {
+        List<CatalogDto> catalogDtos = new ArrayList<>();
+        for (Catalog catalog : catalogs) {
+
+            if (catalog.getUsers() != null && !catalog.getUsers().isEmpty()) {
+                catalogDtos.add(mapToCatalogDto(catalog));
+            } else {
+
+                System.out.println("Warning: Catalog with ID " + catalog.getId() + " does not have 'users' property.");
+            }
+        }
+        return catalogDtos;
+    }
 
     public class BadRequestException extends RuntimeException {
         public BadRequestException(String message) {
@@ -83,19 +97,21 @@ public class CatalogService {
     }
 
 
-    public CatalogDto getCatalogByUserId(String userId) {
+    public List<CatalogDto> getCatalogsByUserId(String userId) {
         try {
             ObjectId objectId = new ObjectId(userId);
-            Catalog catalog = catalogRepository.findByUsersContains(objectId);
+            List<Catalog> catalogs = new ArrayList<>();
+            catalogs = catalogRepository.findByUsersContains(objectId);
 
-            if (catalog != null) {
-                return mapToCatalogDto(catalog);
+
+            if (catalogs != null ) {
+                return mapToCatalogDtoList(catalogs);
             } else {
-                // Handle case when catalog is not found
-                throw new NotFoundException("Catalog not found for user with ID: " + userId);
+
+                throw new NotFoundException("Catalogs not found for user with ID: " + userId);
             }
         } catch (IllegalArgumentException e) {
-            // Handle case when user ID is not valid
+
             throw new BadRequestException("Invalid user ID: " + userId);
         }
     }

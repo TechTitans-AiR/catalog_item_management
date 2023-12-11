@@ -32,11 +32,11 @@ public class CatalogController {
     @GetMapping("/{userId}")
     public ResponseEntity<?> getCatalogByUser(@PathVariable String userId) {
         try {
-            // Your logic to retrieve the catalog based on the user ID
-            CatalogDto catalog = catalogService.getCatalogByUserId(userId);
 
-            if (catalog != null) {
-                return new ResponseEntity<>(catalog, HttpStatus.OK);
+            List<CatalogDto> catalogsDto = catalogService.getCatalogsByUserId(userId);
+
+            if (catalogsDto != null && !catalogsDto.isEmpty()) {
+                return new ResponseEntity<>(catalogsDto, HttpStatus.OK);
             } else {
                 String errorMessage = "Catalog not found for user with ID: " + userId;
                 return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
