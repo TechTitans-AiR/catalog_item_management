@@ -46,4 +46,21 @@ public class CatalogController {
         }
     }
 
+    @GetMapping("/{catalogId}")
+    public ResponseEntity<?> getCatalogById(@PathVariable String catalogId){
+        try{
+            CatalogDto catalogDto = catalogService.getCatalogById(catalogId);
+            if(catalogDto!=null){
+                return new ResponseEntity<>(catalogDto, HttpStatus.OK);
+            }else{
+                String errorMessage = "Catalog with id: " + catalogId + " is not found.";
+                return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+            }
+
+        }catch(Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
 }

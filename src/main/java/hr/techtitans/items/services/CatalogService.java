@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,6 +83,17 @@ public class CatalogService {
             }
         }
         return catalogDtos;
+    }
+
+    public CatalogDto getCatalogById(String catalogId) {
+        ObjectId objectId = new ObjectId(catalogId);
+        Optional<Catalog> optionalCatalog=catalogRepository.findById(objectId);
+        if(optionalCatalog.isPresent()){
+            Catalog catalog = optionalCatalog.get();
+            return mapToCatalogDto(catalog);
+        }else{
+            return null;
+        }
     }
 
     public class BadRequestException extends RuntimeException {
