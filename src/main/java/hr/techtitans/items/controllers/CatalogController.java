@@ -29,7 +29,7 @@ public class CatalogController {
         return new ResponseEntity<List<CatalogDto>>(catalogService.allCatalogs(), HttpStatus.OK);
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<?> getCatalogByUser(@PathVariable String userId) {
         try {
 
