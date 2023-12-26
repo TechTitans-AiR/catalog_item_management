@@ -60,7 +60,35 @@ public class CatalogController {
         }catch(Exception e){
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
     }
 
+    @PatchMapping("/disable/{catalogId}")
+    public ResponseEntity<Object> disableCatalog(@PathVariable String catalogId){
+        try {
+            boolean isDisabled = catalogService.disableCatalog(catalogId);
+            if (isDisabled) {
+                return new ResponseEntity<>("Catalog successfully disabled.", HttpStatus.OK);
+            } else {
+                String errorMessage = "Catalog with id: " + catalogId + " is not found or already disabled.";
+                return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/enable/{catalogId}")
+    public ResponseEntity<Object> enableCatalog(@PathVariable String catalogId){
+        try {
+            boolean isDisabled = catalogService.enableCatalog(catalogId);
+            if (!isDisabled) {
+                return new ResponseEntity<>("Catalog successfully enabled.", HttpStatus.OK);
+            } else {
+                String errorMessage = "Catalog with id: " + catalogId + " is not found or already enabled.";
+                return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

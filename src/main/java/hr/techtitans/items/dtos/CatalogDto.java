@@ -34,4 +34,6 @@ public class CatalogDto {
     private LocalDateTime date_created;
 
     private LocalDateTime date_modified;
+
+    private Boolean disabled;
 }

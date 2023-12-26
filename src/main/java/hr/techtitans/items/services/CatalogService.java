@@ -49,6 +49,8 @@ public class CatalogService {
         catalog.setUsers(userIds);
         catalog.setDate_created(currentDateTime);
         catalog.setDate_modified(currentDateTime);
+        catalog.setDisabled(false);
+
 
         catalogRepository.insert(catalog);
         return new ResponseEntity<>("Catalog created successfully", HttpStatus.CREATED);
@@ -68,7 +70,8 @@ public class CatalogService {
                 catalog.getServices(),
                 catalog.getUsers(),
                 catalog.getDate_created(),
-                catalog.getDate_modified()
+                catalog.getDate_modified(),
+                catalog.getDisabled()
         );
     }
     private List<CatalogDto> mapToCatalogDtoList(List<Catalog> catalogs) {
@@ -128,4 +131,38 @@ public class CatalogService {
         }
     }
 
+    public boolean disableCatalog(String catalogId){
+        ObjectId objectId = new ObjectId(catalogId);
+        Optional<Catalog> optionalCatalog=catalogRepository.findById(objectId);
+        if (optionalCatalog.isPresent()) {
+            Catalog catalog = optionalCatalog.get();
+
+            if (!catalog.getDisabled()) {
+                catalog.setDisabled(true);
+                catalogRepository.save(catalog);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    public boolean enableCatalog(String catalogId){
+        ObjectId objectId = new ObjectId(catalogId);
+        Optional<Catalog> optionalCatalog=catalogRepository.findById(objectId);
+        if (optionalCatalog.isPresent()) {
+            Catalog catalog = optionalCatalog.get();
+            if (catalog.getDisabled()) {
+                catalog.setDisabled(false);
+                catalogRepository.save(catalog);
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
 }
