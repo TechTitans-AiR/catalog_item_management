@@ -24,7 +24,7 @@ public class ServiceController {
         return new ResponseEntity<List<ServiceDto>>(serviceService.allServices(), HttpStatus.OK);
     }
     @PutMapping("/update/{serviceId}")
-    public ResponseEntity<?> updateArticle(@PathVariable String serviceId, @RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> updateService(@PathVariable String serviceId, @RequestBody Map<String, Object> payload) {
         try {
             ResponseEntity<?> response = serviceService.updateService(serviceId, payload);
 
