@@ -22,6 +22,24 @@ public class ItemController {
         return new ResponseEntity<List<ItemDto>>(itemService.allItems(), HttpStatus.OK);
     }
 
+    @PutMapping("/update/{articleId}")
+    public ResponseEntity<?> updateArticle(@PathVariable String articleId, @RequestBody Map<String, Object> payload) {
+        try {
+            ResponseEntity<?> response = itemService.updateItem(articleId, payload);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return ResponseEntity.ok("Article updated successfully.");
+            } else if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Article not found with id: " + articleId);
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating the article: " + response.getBody());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating the article: " + e.getMessage());
+        }
+    }
+
+
     @GetMapping("/{itemId}")
     public ResponseEntity<?> getItemById(@PathVariable String itemId){
         try {

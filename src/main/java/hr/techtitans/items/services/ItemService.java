@@ -62,6 +62,64 @@ public class ItemService {
         }
     }
 
+    public ResponseEntity<?> updateItem(String itemId, Map<String, Object> payload){
+        try {
+            if (itemId == null || itemId.isEmpty()) {
+                return new ResponseEntity<>("Item ID not provided", HttpStatus.BAD_REQUEST);
+            }
+            ObjectId objectId=new ObjectId(itemId);
+            Optional<Item> existingItem = itemRepository.findById(objectId);
+
+            if (existingItem.isPresent()) {
+                Item itemToUpdate = existingItem.get();
+                if(payload.containsKey("name")){
+                    itemToUpdate.setName((String) payload.get("name"));
+                }
+                if (payload.containsKey("description")) {
+                    itemToUpdate.setDescription((String) payload.get("description"));
+                }
+                if (payload.containsKey("price")) {
+                    itemToUpdate.setPrice((Double) payload.get("price"));
+                }
+                if (payload.containsKey("weight")) {
+                    itemToUpdate.setWeight((Double) payload.get("weight"));
+                }
+                if (payload.containsKey("quantity_in_stock")) {
+                    itemToUpdate.setQuantity_in_stock((Integer) payload.get("quantity_in_stock"));
+                }
+                if (payload.containsKey("material")) {
+                    itemToUpdate.setMaterial((String) payload.get("material"));
+                }
+                if (payload.containsKey("brand")) {
+                    itemToUpdate.setBrand((String) payload.get("brand"));
+                }
+                if (payload.containsKey("currency")) {
+                    itemToUpdate.setCurrency((String) payload.get("currency"));
+                }
+                if (payload.containsKey("category")) {
+                    String categoryId = (String) payload.get("category");
+                    ObjectId newId = new ObjectId(categoryId);
+                    itemToUpdate.setItemCategory(newId);
+                }
+                itemRepository.save(itemToUpdate);
+                return new ResponseEntity<>("Item updated successfully", HttpStatus.OK);
+            }else {
+                return new ResponseEntity<>("Item not found", HttpStatus.NOT_FOUND);
+            }
+
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> responseBody = Map.of("message", "Item not found");
+            return new ResponseEntity<>(responseBody, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> responseBody = Map.of("message", "An error occurred");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+
+
 
     public ResponseEntity<Object> deleteItemById(String itemId) {
         try {

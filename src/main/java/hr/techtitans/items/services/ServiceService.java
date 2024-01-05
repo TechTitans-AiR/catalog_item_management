@@ -85,4 +85,57 @@ public class ServiceService {
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public ResponseEntity<?> updateService(String serviceId, Map<String, Object> payload) {
+        try {
+            if (serviceId == null || serviceId.isEmpty()) {
+                return new ResponseEntity<>("Service ID not provided", HttpStatus.BAD_REQUEST);
+            }
+            ObjectId objectId=new ObjectId(serviceId);
+            Optional<Service> existingService = serviceRepository.findById(objectId);
+
+            if (existingService.isPresent()) {
+                Service serviceToUpdate = existingService.get();
+                if(payload.containsKey("serviceName")){
+                    serviceToUpdate.setServiceName((String) payload.get("serviceName"));
+                }
+                if (payload.containsKey("description")) {
+                    serviceToUpdate.setDescription((String) payload.get("description"));
+                }
+                if (payload.containsKey("price")) {
+                    serviceToUpdate.setPrice((Integer) payload.get("price"));
+                }
+                if (payload.containsKey("serviceProvider")) {
+                    serviceToUpdate.setServiceProvider((String) payload.get("serviceProvider"));
+                }
+                if (payload.containsKey("duration")) {
+                    serviceToUpdate.setDuration((Integer) payload.get("duration"));
+                }
+                if (payload.containsKey("availability")) {
+                    serviceToUpdate.setAvailability((String) payload.get("availability"));
+                }
+                if (payload.containsKey("serviceLocation")) {
+                    serviceToUpdate.setServiceLocation((String) payload.get("serviceLocation"));
+                }
+                if (payload.containsKey("currency")) {
+                    serviceToUpdate.setCurrency((String) payload.get("currency"));
+                }
+                if (payload.containsKey("durationUnit")) {
+                    serviceToUpdate.setDurationUnit((String) payload.get("durationUnit"));
+                }
+                serviceRepository.save(serviceToUpdate);
+                return new ResponseEntity<>("Service updated successfully", HttpStatus.OK);
+            }else {
+                return new ResponseEntity<>("Service not found", HttpStatus.NOT_FOUND);
+            }
+
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> responseBody = Map.of("message", "Service not found");
+            return new ResponseEntity<>(responseBody, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> responseBody = Map.of("message", "An error occurred");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
