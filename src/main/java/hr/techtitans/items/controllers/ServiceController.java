@@ -23,6 +23,22 @@ public class ServiceController {
     public ResponseEntity<List<ServiceDto>> getAllServices(){
         return new ResponseEntity<List<ServiceDto>>(serviceService.allServices(), HttpStatus.OK);
     }
+    @PutMapping("/update/{serviceId}")
+    public ResponseEntity<?> updateArticle(@PathVariable String serviceId, @RequestBody Map<String, Object> payload) {
+        try {
+            ResponseEntity<?> response = serviceService.updateService(serviceId, payload);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return ResponseEntity.ok("Service updated successfully.");
+            } else if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service not found with id: " + serviceId);
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating the service: " + response.getBody());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating the service: " + e.getMessage());
+        }
+    }
 
     @GetMapping("/{serviceId}")
     public ResponseEntity<?> getServiceById(@PathVariable String serviceId){
