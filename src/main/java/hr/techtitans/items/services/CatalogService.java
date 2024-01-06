@@ -6,23 +6,36 @@ import hr.techtitans.items.models.Catalog;
 import hr.techtitans.items.models.Item;
 import hr.techtitans.items.models.ItemCategories;
 import hr.techtitans.items.repositories.CatalogRepository;
+import hr.techtitans.items.repositories.ItemRepository;
+import hr.techtitans.items.repositories.ServiceRepository;
 import org.bson.types.ObjectId;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class CatalogService {
+    @Value("${userApiUrl}")
+    private String userApiUrl;
+
     @Autowired
     private CatalogRepository catalogRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
+
+    @Autowired
+    private ServiceRepository serviceRepository;
 
     public ResponseEntity<Object> createCatalog(Map<String, Object> payload) {
 
@@ -163,6 +176,152 @@ public class CatalogService {
             }
         } else {
             return true;
+        }
+    }
+
+    public ResponseEntity<Object> updateCatalog(String catalogId, CatalogDto updatedCatalogDto, String token) {
+        try {
+            String role = getRoleFromToken(token);
+            if(!Objects.equals(role, "admin")){
+                return new ResponseEntity<>("Only admin can edit catalog", HttpStatus.UNAUTHORIZED);
+            }
+            ObjectId objectId = new ObjectId(catalogId);
+            Optional<Catalog> optionalCatalog = catalogRepository.findById(objectId);
+            if (optionalCatalog.isPresent()) {
+                Catalog existingCatalog = optionalCatalog.get();
+                List<ObjectId> updatedUsers = updatedCatalogDto.getUsers();
+                if (updatedUsers != null && !updatedUsers.isEmpty()) {
+                    for (ObjectId userId : updatedUsers) {
+                        if (!userExists(userId)) {
+                            return new ResponseEntity<>("User with id: " + userId + " does not exist.", HttpStatus.BAD_REQUEST);
+                        }
+                    }
+                }
+
+                List<ObjectId> updatedArticles = updatedCatalogDto.getArticles();
+                if (updatedArticles != null && !updatedArticles.isEmpty()) {
+                    for (ObjectId articleId : updatedArticles) {
+                        if (!itemExists(articleId)) {
+                            return new ResponseEntity<>("Item with id: " + articleId + " does not exist.", HttpStatus.BAD_REQUEST);
+                        }
+                    }
+                }
+
+                List<ObjectId> updatedServices = updatedCatalogDto.getServices();
+                if (updatedServices != null && !updatedServices.isEmpty()) {
+                    for (ObjectId serviceId : updatedServices) {
+                        if (!serviceExists(serviceId)) {
+                            return new ResponseEntity<>("Service with id: " + serviceId + " does not exist.", HttpStatus.BAD_REQUEST);
+                        }
+                    }
+                }
+
+                updateCatalogFields(existingCatalog, updatedCatalogDto);
+
+                catalogRepository.save(existingCatalog);
+
+                return new ResponseEntity<>("Catalog successfully updated.", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Catalog with id: " + catalogId + " is not found.", HttpStatus.NOT_FOUND);
+            }
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>("Invalid catalog ID", HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    private void updateCatalogFields(Catalog existingCatalog, CatalogDto updatedCatalogDto) {
+        if (updatedCatalogDto.getName() != null) {
+            existingCatalog.setName(updatedCatalogDto.getName());
+        }
+
+        if (updatedCatalogDto.getArticles() != null) {
+            existingCatalog.setArticles(updatedCatalogDto.getArticles());
+        }
+
+        if (updatedCatalogDto.getServices() != null) {
+            existingCatalog.setServices(updatedCatalogDto.getServices());
+        }
+
+        if (updatedCatalogDto.getUsers() != null) {
+            existingCatalog.setUsers(updatedCatalogDto.getUsers());
+        }
+
+        /*if (updatedCatalogDto.getDisabled() != null) {
+            existingCatalog.setDisabled(updatedCatalogDto.getDisabled());
+        }*/
+
+        existingCatalog.setDate_modified(LocalDateTime.now());
+
+    }
+
+    public String getRoleFromToken(String token) {
+        try {
+            String[] tokenParts = token.split("\\.");
+
+            if (tokenParts.length != 3) {
+                System.out.println("Invalid token format");
+                System.out.println(tokenParts.length);
+                return null;
+            }
+
+            String payload = tokenParts[1];
+
+            byte[] decodedPayload = java.util.Base64.getUrlDecoder().decode(payload);
+            String decodedPayloadString = new String(decodedPayload, StandardCharsets.UTF_8);
+
+            JSONObject payloadJson = new JSONObject(decodedPayloadString);
+
+            String role = payloadJson.getString("role");
+
+            System.out.println("Role from Token in getRoleFromToken: " + role);
+            System.out.println(payloadJson);
+
+            return role;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private boolean userExists(ObjectId userId) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.getForEntity(userApiUrl + "/" + userId, String.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return true;
+            } else if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return false;
+            } else {
+                System.out.println("Error while checking user existence. Status code: " + response.getStatusCode());
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("An error occurred while checking user existence: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean itemExists(ObjectId itemId) {
+        try {
+            Optional<Item> optionalItem = itemRepository.findById(itemId);
+            return optionalItem.isPresent();
+        } catch (Exception e) {
+            System.out.println("An error occurred while checking item existence: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean serviceExists(ObjectId serviceId) {
+        try {
+            Optional<hr.techtitans.items.models.Service> optionalService = serviceRepository.findById(serviceId);
+            return optionalService.isPresent();
+        } catch (Exception e) {
+            System.out.println("An error occurred while checking service existence: " + e.getMessage());
+            return false;
         }
     }
 }

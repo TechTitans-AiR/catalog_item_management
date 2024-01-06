@@ -91,4 +91,9 @@ public class CatalogController {
             return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PatchMapping("/update/{catalogId}")
+    public ResponseEntity<Object> updateCatalog(@PathVariable String catalogId, @RequestBody CatalogDto updatedCatalogDto, @RequestHeader("Authorization") String token) {
+        return catalogService.updateCatalog(catalogId, updatedCatalogDto, token);
+    }
 }
