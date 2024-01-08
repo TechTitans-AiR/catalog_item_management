@@ -20,13 +20,22 @@ public class ServiceController {
     private ServiceService serviceService;
 
     @GetMapping
-    public ResponseEntity<List<ServiceDto>> getAllServices(){
-        return new ResponseEntity<List<ServiceDto>>(serviceService.allServices(), HttpStatus.OK);
+    public ResponseEntity<Object> getAllServices(@RequestHeader("Authorization") String token){
+        ResponseEntity<Object> adminCheckResult = serviceService.checkAdminRole(token);
+        if (adminCheckResult != null) {
+            return adminCheckResult;
+        }
+        return new ResponseEntity<>(serviceService.allServices(token), HttpStatus.OK);
     }
+
     @PutMapping("/update/{serviceId}")
-    public ResponseEntity<?> updateService(@PathVariable String serviceId, @RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> updateService(@PathVariable String serviceId, @RequestBody Map<String, Object> payload, @RequestHeader("Authorization") String token) {
         try {
-            ResponseEntity<?> response = serviceService.updateService(serviceId, payload);
+            ResponseEntity<Object> adminCheckResult = serviceService.checkAdminRole(token);
+            if (adminCheckResult != null) {
+                return adminCheckResult;
+            }
+            ResponseEntity<?> response = serviceService.updateService(serviceId, payload, token);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 return ResponseEntity.ok("Service updated successfully.");
@@ -41,9 +50,13 @@ public class ServiceController {
     }
 
     @GetMapping("/{serviceId}")
-    public ResponseEntity<?> getServiceById(@PathVariable String serviceId){
+    public ResponseEntity<?> getServiceById(@PathVariable String serviceId, @RequestHeader("Authorization") String token){
         try {
-            ServiceDto serviceDto = serviceService.getServiceById(serviceId);
+            ResponseEntity<Object> adminCheckResult = serviceService.checkAdminRole(token);
+            if (adminCheckResult != null) {
+                return adminCheckResult;
+            }
+            ServiceDto serviceDto = serviceService.getServiceById(serviceId, token);
 
             if (serviceDto != null) {
                 return new ResponseEntity<>(serviceDto, HttpStatus.OK);
@@ -58,8 +71,12 @@ public class ServiceController {
     }
 
     @DeleteMapping("/delete/{serviceId}")
-    public ResponseEntity<Object> deleteService(@PathVariable String serviceId) {
-        return serviceService.deleteServiceById(serviceId);
+    public ResponseEntity<Object> deleteService(@PathVariable String serviceId, @RequestHeader("Authorization") String token) {
+        ResponseEntity<Object> adminCheckResult = serviceService.checkAdminRole(token);
+        if (adminCheckResult != null) {
+            return adminCheckResult;
+        }
+        return serviceService.deleteServiceById(serviceId, token);
     }
     @DeleteMapping("/delete/")
     public ResponseEntity<Object> noServiceIdProvided() {

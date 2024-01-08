@@ -37,8 +37,25 @@ public class CatalogService {
     @Autowired
     private ServiceRepository serviceRepository;
 
-    public ResponseEntity<Object> createCatalog(Map<String, Object> payload) {
+    public ResponseEntity<Object> checkAdminRole(String token) {
+        try {
+            String role = getRoleFromToken(token);
+            if (!Objects.equals(role, "admin")) {
+                return new ResponseEntity<>("Only admin users can perform this action", HttpStatus.UNAUTHORIZED);
+            }
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("An error occurred while checking admin role", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
+    public ResponseEntity<Object> createCatalog(Map<String, Object> payload, String token) {
+
+        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+        if (adminCheckResult != null) {
+            return adminCheckResult;
+        }
         String name = (String) payload.get("name");
         if (name == null || name.trim().isEmpty()) {
             return new ResponseEntity<>("Name is mandatory", HttpStatus.BAD_REQUEST);
@@ -69,10 +86,19 @@ public class CatalogService {
         return new ResponseEntity<>("Catalog created successfully", HttpStatus.CREATED);
     }
 
-    public List<CatalogDto> allCatalogs(){
-        List<Catalog> catalogs = catalogRepository.findAll();
-        return catalogs.stream().map(this::mapToCatalogDto).collect(Collectors.toList());
-
+    public List<CatalogDto> allCatalogs(String token){
+        try {
+            String role = getRoleFromToken(token);
+            if (!Objects.equals(role, "admin")) {
+                return Collections.emptyList();
+            }
+            List<Catalog> catalogs = catalogRepository.findAll();
+            return catalogs.stream().map(this::mapToCatalogDto).collect(Collectors.toList());
+        } catch (Exception e) {
+            System.out.println("Error in allCatalogs: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     private CatalogDto mapToCatalogDto(Catalog catalog){
@@ -101,7 +127,12 @@ public class CatalogService {
         return catalogDtos;
     }
 
-    public CatalogDto getCatalogById(String catalogId) {
+    public CatalogDto getCatalogById(String catalogId, String token) {
+        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+        if (adminCheckResult != null) {
+            System.out.println("Unauthorized: " + adminCheckResult.getBody());
+            return null;
+        }
         ObjectId objectId = new ObjectId(catalogId);
         Optional<Catalog> optionalCatalog=catalogRepository.findById(objectId);
         if(optionalCatalog.isPresent()){
@@ -117,7 +148,6 @@ public class CatalogService {
             super(message);
         }
     }
-
     public class NotFoundException extends RuntimeException {
         public NotFoundException(String message) {
             super(message);
@@ -125,12 +155,15 @@ public class CatalogService {
     }
 
 
-    public List<CatalogDto> getCatalogsByUserId(String userId) {
+    public List<CatalogDto> getCatalogsByUserId(String userId, String token) {
         try {
+            String role = getRoleFromToken(token);
+            if (!Objects.equals(role, "admin")) {
+                return Collections.emptyList();
+            }
             ObjectId objectId = new ObjectId(userId);
             List<Catalog> catalogs = new ArrayList<>();
             catalogs = catalogRepository.findByUsersContains(objectId);
-
 
             if (catalogs != null ) {
                 return mapToCatalogDtoList(catalogs);
@@ -144,7 +177,13 @@ public class CatalogService {
         }
     }
 
-    public boolean disableCatalog(String catalogId){
+    public boolean disableCatalog(String catalogId, String token){
+        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+        if (adminCheckResult != null) {
+
+            System.out.println("Unauthorized: " + adminCheckResult.getBody());
+            return false;
+        }
         ObjectId objectId = new ObjectId(catalogId);
         Optional<Catalog> optionalCatalog=catalogRepository.findById(objectId);
         if (optionalCatalog.isPresent()) {
@@ -162,7 +201,13 @@ public class CatalogService {
         }
     }
 
-    public boolean enableCatalog(String catalogId){
+    public boolean enableCatalog(String catalogId, String token){
+        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+        if (adminCheckResult != null) {
+
+            System.out.println("Unauthorized: " + adminCheckResult.getBody());
+            return false;
+        }
         ObjectId objectId = new ObjectId(catalogId);
         Optional<Catalog> optionalCatalog=catalogRepository.findById(objectId);
         if (optionalCatalog.isPresent()) {

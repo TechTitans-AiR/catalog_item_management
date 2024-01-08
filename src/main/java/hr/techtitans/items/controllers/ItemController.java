@@ -18,14 +18,23 @@ public class ItemController {
     private ItemService itemService;
 
     @GetMapping
-    public ResponseEntity<List<ItemDto>> getAllItems(){
-        return new ResponseEntity<List<ItemDto>>(itemService.allItems(), HttpStatus.OK);
+    public ResponseEntity<List<ItemDto>> getAllItems(@RequestHeader("Authorization") String token){
+        ResponseEntity<Object> adminCheckResult = itemService.checkAdminRole(token);
+        if (adminCheckResult != null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return new ResponseEntity<>(itemService.allItems(token), HttpStatus.OK);
     }
 
+
     @PutMapping("/update/{articleId}")
-    public ResponseEntity<?> updateArticle(@PathVariable String articleId, @RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> updateArticle(@PathVariable String articleId, @RequestBody Map<String, Object> payload, @RequestHeader("Authorization") String token) {
         try {
-            ResponseEntity<?> response = itemService.updateItem(articleId, payload);
+            ResponseEntity<Object> adminCheckResult = itemService.checkAdminRole(token);
+            if (adminCheckResult != null) {
+                return adminCheckResult;
+            }
+            ResponseEntity<?> response = itemService.updateItem(articleId, payload, token);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 return ResponseEntity.ok("Article updated successfully.");
@@ -41,9 +50,13 @@ public class ItemController {
 
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<?> getItemById(@PathVariable String itemId){
+    public ResponseEntity<?> getItemById(@PathVariable String itemId, @RequestHeader("Authorization") String token){
         try {
-            ItemDto itemDto = itemService.getItemById(itemId);
+            ResponseEntity<Object> adminCheckResult = itemService.checkAdminRole(token);
+            if (adminCheckResult != null) {
+                return adminCheckResult;
+            }
+            ItemDto itemDto = itemService.getItemById(itemId, token);
 
             if (itemDto != null) {
                 return new ResponseEntity<>(itemDto, HttpStatus.OK);
@@ -58,8 +71,12 @@ public class ItemController {
     }
 
     @DeleteMapping("/delete/{itemId}")
-    public ResponseEntity<Object> deleteItem(@PathVariable String itemId) {
-        return itemService.deleteItemById(itemId);
+    public ResponseEntity<Object> deleteItem(@PathVariable String itemId, @RequestHeader("Authorization") String token) {
+        ResponseEntity<Object> adminCheckResult = itemService.checkAdminRole(token);
+        if (adminCheckResult != null) {
+            return adminCheckResult;
+        }
+        return itemService.deleteItemById(itemId, token);
     }
     @DeleteMapping("/delete/")
     public ResponseEntity<Object> noItemIdProvided() {

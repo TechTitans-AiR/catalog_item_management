@@ -1,6 +1,5 @@
 package hr.techtitans.items.dtos;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import hr.techtitans.items.models.Catalog;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

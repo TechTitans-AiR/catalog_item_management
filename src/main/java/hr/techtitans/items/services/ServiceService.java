@@ -9,14 +9,14 @@ import hr.techtitans.items.models.Service;
 
 import hr.techtitans.items.repositories.ServiceRepository;
 import org.bson.types.ObjectId;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
@@ -26,8 +26,52 @@ public class ServiceService {
     private ServiceRepository serviceRepository;
 
 
+    public ResponseEntity<Object> checkAdminRole(String token) {
+        try {
+            String role = getRoleFromToken(token);
+            if (!Objects.equals(role, "admin")) {
+                return new ResponseEntity<>("Only admin users can perform this action", HttpStatus.UNAUTHORIZED);
+            }
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("An error occurred while checking admin role", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
-    public List<ServiceDto> allServices(){
+    public String getRoleFromToken(String token) {
+        try {
+            String[] tokenParts = token.split("\\.");
+
+            if (tokenParts.length != 3) {
+                System.out.println("Invalid token format");
+                System.out.println(tokenParts.length);
+                return null;
+            }
+
+            String payload = tokenParts[1];
+
+            byte[] decodedPayload = java.util.Base64.getUrlDecoder().decode(payload);
+            String decodedPayloadString = new String(decodedPayload, StandardCharsets.UTF_8);
+
+            JSONObject payloadJson = new JSONObject(decodedPayloadString);
+
+            String role = payloadJson.getString("role");
+
+            System.out.println("Role from Token in getRoleFromToken: " + role);
+            System.out.println(payloadJson);
+
+            return role;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public List<ServiceDto> allServices(String token){
+        String role = getRoleFromToken(token);
+        if (!Objects.equals(role, "admin")) {
+            return Collections.emptyList();
+        }
         List<Service> services = serviceRepository.findAll();
         return services.stream().map(this::mapToServiceDto).collect(Collectors.toList());
 
@@ -48,7 +92,12 @@ public class ServiceService {
         );
     }
 
-    public ServiceDto getServiceById(String serviceId) {
+    public ServiceDto getServiceById(String serviceId, String token) {
+        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+        if (adminCheckResult != null) {
+            System.out.println("Unauthorized: " + adminCheckResult.getBody());
+            return null;
+        }
         ObjectId objectId = new ObjectId(serviceId);
         Optional<Service> optionalService = serviceRepository.findById(objectId);
 
@@ -61,8 +110,12 @@ public class ServiceService {
     }
 
 
-    public ResponseEntity<Object> deleteServiceById(String serviceId) {
+    public ResponseEntity<Object> deleteServiceById(String serviceId, String token) {
         try {
+            ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+            if (adminCheckResult != null) {
+                return adminCheckResult;
+            }
             if (serviceId == null || serviceId.isEmpty()) {
                 return new ResponseEntity<>("Service ID not provided", HttpStatus.BAD_REQUEST);
             }
@@ -86,8 +139,12 @@ public class ServiceService {
         }
     }
 
-    public ResponseEntity<?> updateService(String serviceId, Map<String, Object> payload) {
+    public ResponseEntity<?> updateService(String serviceId, Map<String, Object> payload, String token) {
         try {
+            ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+            if (adminCheckResult != null) {
+                return adminCheckResult;
+            }
             if (serviceId == null || serviceId.isEmpty()) {
                 return new ResponseEntity<>("Service ID not provided", HttpStatus.BAD_REQUEST);
             }
