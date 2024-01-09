@@ -28,6 +28,11 @@ public class ServiceController {
         return new ResponseEntity<>(serviceService.allServices(token), HttpStatus.OK);
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<Object> createService(@RequestBody Map<String, Object> payload, @RequestHeader("Authorization") String token){
+        return new ResponseEntity<>(serviceService.createService(payload, token), HttpStatus.CREATED);
+    }
+
     @PutMapping("/update/{serviceId}")
     public ResponseEntity<?> updateService(@PathVariable String serviceId, @RequestBody Map<String, Object> payload, @RequestHeader("Authorization") String token) {
         try {

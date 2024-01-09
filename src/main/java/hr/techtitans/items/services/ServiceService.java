@@ -3,6 +3,7 @@ package hr.techtitans.items.services;
 
 import hr.techtitans.items.dtos.ItemDto;
 import hr.techtitans.items.dtos.ServiceDto;
+import hr.techtitans.items.models.Catalog;
 import hr.techtitans.items.models.Item;
 import hr.techtitans.items.models.ItemCategories;
 import hr.techtitans.items.models.Service;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,6 +68,35 @@ public class ServiceService {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public ResponseEntity<Object> createService(Map<String, Object> payload, String token) {
+
+        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+        if (adminCheckResult != null) {
+            return adminCheckResult;
+        }
+        String name = (String) payload.get("serviceName");
+        if (name == null || name.trim().isEmpty()) {
+            return new ResponseEntity<>("Service name is mandatory", HttpStatus.BAD_REQUEST);
+        }
+
+
+        Service service = new Service();
+
+        service.setServiceName((String) payload.get("serviceName"));
+        service.setDescription((String) payload.get("description"));
+        service.setServiceProvider((String) payload.get("serviceProvider"));
+        service.setPrice((Integer) payload.get("price"));
+        service.setCurrency((String) payload.get("currency"));
+        service.setDuration((Integer) payload.get("duration"));
+        service.setDurationUnit((String) payload.get("durationUnit"));
+        service.setServiceLocation((String) payload.get("serviceLocation"));
+        service.setAvailability((String) payload.get("availability"));
+
+
+        serviceRepository.insert(service);
+        return new ResponseEntity<>("New service created successfully", HttpStatus.CREATED);
     }
     public List<ServiceDto> allServices(String token){
         String role = getRoleFromToken(token);
