@@ -210,6 +210,53 @@ public class CatalogService {
         }
     }
 
+    public List<CatalogDto> searchCatalogs(Map<String, Object> payload) {
+        if (payload == null || payload.isEmpty()) {
+            List<Catalog> allCatalogs = catalogRepository.findAll();
+            return mapToCatalogDtoList(allCatalogs);
+        }
+
+        List<Catalog> searchResults = null;
+
+        for (String key : payload.keySet()) {
+            List<Catalog> currentResults = new ArrayList<>();
+
+            switch (key) {
+                case "name":
+                    String catalogName = (String) payload.get("name");
+                    currentResults = catalogRepository.findByNameContainingIgnoreCase(catalogName);
+                    break;
+                case "article":
+                    ObjectId articleId = new ObjectId((String) payload.get("article"));
+                    currentResults = catalogRepository.findByArticlesContaining(articleId);
+                    break;
+                case "service":
+                    ObjectId serviceId = new ObjectId((String) payload.get("service"));
+                    currentResults = catalogRepository.findByServicesContaining(serviceId);
+                    break;
+                case "user":
+                    ObjectId userId = new ObjectId((String) payload.get("user"));
+                    currentResults = catalogRepository.findByUsersContains(userId);
+                    break;
+                default:
+                    break;
+            }
+
+            if (searchResults == null) {
+                searchResults = currentResults;
+            } else {
+                searchResults.retainAll(currentResults);
+            }
+        }
+
+        if (searchResults == null) {
+            return Collections.emptyList();
+        }
+
+        List<CatalogDto> catalogsDto = mapToCatalogDtoList(searchResults);
+        return catalogsDto;
+    }
+
 
     public class BadRequestException extends RuntimeException {
         public BadRequestException(String message) {
