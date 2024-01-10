@@ -63,6 +63,16 @@ public class CatalogController {
         }
     }
 
+    @PostMapping("/search")
+    public ResponseEntity<?> searchCatalogs(@RequestBody Map<String, Object> payload) {
+        try {
+            List<CatalogDto> catalogDtoList = catalogService.searchCatalogs(payload);
+            return new ResponseEntity<>(catalogDtoList, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     @GetMapping("/{catalogId}")
     public ResponseEntity<?> getCatalogById(@PathVariable String catalogId, @RequestHeader("Authorization") String token) {
