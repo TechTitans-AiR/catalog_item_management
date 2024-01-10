@@ -87,7 +87,7 @@ public class ServiceService {
         service.setServiceName((String) payload.get("serviceName"));
         service.setDescription((String) payload.get("description"));
         service.setServiceProvider((String) payload.get("serviceProvider"));
-        service.setPrice((Integer) payload.get("price"));
+        service.setPrice((Double) payload.get("price"));
         service.setCurrency((String) payload.get("currency"));
         service.setDuration((Integer) payload.get("duration"));
         service.setDurationUnit((String) payload.get("durationUnit"));
@@ -191,7 +191,7 @@ public class ServiceService {
                     serviceToUpdate.setDescription((String) payload.get("description"));
                 }
                 if (payload.containsKey("price")) {
-                    serviceToUpdate.setPrice((Integer) payload.get("price"));
+                    serviceToUpdate.setPrice((Double) payload.get("price"));
                 }
                 if (payload.containsKey("serviceProvider")) {
                     serviceToUpdate.setServiceProvider((String) payload.get("serviceProvider"));

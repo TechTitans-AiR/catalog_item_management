@@ -25,7 +25,7 @@ public class Service {
 
     private String serviceProvider;
 
-    private Integer price;
+    private Double price;
 
     private String currency;
 

@@ -16,7 +16,7 @@ public class ServiceDto {
 
     private String serviceProvider;
 
-    private Integer price;
+    private Double price;
 
     private String currency;
 
