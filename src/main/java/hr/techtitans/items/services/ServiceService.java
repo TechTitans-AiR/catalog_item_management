@@ -80,8 +80,6 @@ public class ServiceService {
         if (name == null || name.trim().isEmpty()) {
             return new ResponseEntity<>("Service name is mandatory", HttpStatus.BAD_REQUEST);
         }
-
-
         Service service = new Service();
 
         service.setServiceName((String) payload.get("serviceName"));
@@ -123,10 +121,22 @@ public class ServiceService {
         );
     }
 
+    public ResponseEntity<Object> checkUserRole(String token) {
+        try {
+            String role = getRoleFromToken(token);
+            if (role == null) {
+                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("An error occurred while checking user role", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     public ServiceDto getServiceById(String serviceId, String token) {
-        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
-        if (adminCheckResult != null) {
-            System.out.println("Unauthorized: " + adminCheckResult.getBody());
+        ResponseEntity<Object> userCheckResult = checkUserRole(token);
+        if (userCheckResult != null) {
+            System.out.println("Unauthorized: " + userCheckResult.getBody());
             return null;
         }
         ObjectId objectId = new ObjectId(serviceId);

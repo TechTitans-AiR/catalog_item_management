@@ -52,9 +52,10 @@ public class ItemController {
     @GetMapping("/{itemId}")
     public ResponseEntity<?> getItemById(@PathVariable String itemId, @RequestHeader("Authorization") String token){
         try {
-            ResponseEntity<Object> adminCheckResult = itemService.checkAdminRole(token);
-            if (adminCheckResult != null) {
-                return adminCheckResult;
+            ResponseEntity<Object> userCheckResult = itemService.checkUserRole(token);
+
+            if (userCheckResult != null) {
+                return userCheckResult;
             }
             ItemDto itemDto = itemService.getItemById(itemId, token);
 
@@ -65,10 +66,10 @@ public class ItemController {
                 return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
             }
         } catch (Exception ex) {
-
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 
     @DeleteMapping("/delete/{itemId}")
     public ResponseEntity<Object> deleteItem(@PathVariable String itemId, @RequestHeader("Authorization") String token) {

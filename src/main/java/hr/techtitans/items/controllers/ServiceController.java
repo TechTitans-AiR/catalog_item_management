@@ -57,9 +57,9 @@ public class ServiceController {
     @GetMapping("/{serviceId}")
     public ResponseEntity<?> getServiceById(@PathVariable String serviceId, @RequestHeader("Authorization") String token){
         try {
-            ResponseEntity<Object> adminCheckResult = serviceService.checkAdminRole(token);
-            if (adminCheckResult != null) {
-                return adminCheckResult;
+            ResponseEntity<Object> userCheckResult = serviceService.checkUserRole(token);
+            if (userCheckResult != null) {
+                return userCheckResult;
             }
             ServiceDto serviceDto = serviceService.getServiceById(serviceId, token);
 

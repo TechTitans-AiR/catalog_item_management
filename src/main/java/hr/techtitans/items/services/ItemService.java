@@ -32,7 +32,7 @@ public class ItemService {
         try {
             String role = getRoleFromToken(token);
             if (!Objects.equals(role, "admin")) {
-                return new ResponseEntity<>("Only admin users can perform this action", HttpStatus.UNAUTHORIZED);
+                return new ResponseEntity<>("You don't have authorization to perform this action", HttpStatus.UNAUTHORIZED);
             }
             return null;
         } catch (Exception e) {
@@ -97,13 +97,26 @@ public class ItemService {
         );
     }
 
-    public ItemDto getItemById(String userId, String token) {
-        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
-        if (adminCheckResult != null) {
-            System.out.println("Unauthorized: " + adminCheckResult.getBody());
+    public ResponseEntity<Object> checkUserRole(String token) {
+        try {
+            String role = getRoleFromToken(token);
+            if (role == null) {
+                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("An error occurred while checking user role", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public ItemDto getItemById(String itemId, String token) {
+        ResponseEntity<Object> userCheckResult = checkUserRole(token);
+        if (userCheckResult != null) {
+            System.out.println("Unauthorized: " + userCheckResult.getBody());
             return null;
         }
-        ObjectId objectId = new ObjectId(userId);
+        ObjectId objectId = new ObjectId(itemId);
         Optional<Item> optionalItem = itemRepository.findById(objectId);
 
         if (optionalItem.isPresent()) {
@@ -112,6 +125,12 @@ public class ItemService {
         } else {
             return null;
         }
+    }
+
+
+    private boolean isMerchant(String token) {
+        String role = getRoleFromToken(token);
+        return Objects.equals(role, "merchant");
     }
 
     public ResponseEntity<?> updateItem(String itemId, Map<String, Object> payload, String token){
