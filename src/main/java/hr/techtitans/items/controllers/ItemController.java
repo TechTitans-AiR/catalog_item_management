@@ -83,4 +83,9 @@ public class ItemController {
         Map<String, Object> responseBody = Map.of("message", "Please provide an item ID");
         return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
     }
+
+    @PostMapping("/create")
+    public ResponseEntity<Object> createItem(@RequestBody Map<String, Object> payload, @RequestHeader("Authorization") String token){
+        return new ResponseEntity<>(itemService.createItem(payload, token), HttpStatus.CREATED);
+    }
 }
