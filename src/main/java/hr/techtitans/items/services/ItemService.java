@@ -201,5 +201,48 @@ public class ItemService {
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public ResponseEntity<Object> createItem(Map<String, Object> payload, String token) {
+
+        ResponseEntity<Object> adminCheckResult = checkAdminRole(token);
+        if (adminCheckResult != null) {
+            return adminCheckResult;
+        }
+        String name = (String) payload.get("name");
+        if (name == null || name.trim().isEmpty()) {
+            return new ResponseEntity<>("Article name is mandatory", HttpStatus.BAD_REQUEST);
+        }
+
+        String category = (String) payload.get("category");
+        if (category == null || category.trim().isEmpty()) {
+            return new ResponseEntity<>("Article category is mandatory", HttpStatus.BAD_REQUEST);
+        }
+
+        String categoryId = (String) payload.get("category");
+        ObjectId newCategoryId = new ObjectId(categoryId);
+
+
+        if(!itemCategoriesRepository.findById(newCategoryId).isPresent()){
+            System.out.println("Nema kategorije s tim ID");
+            return new ResponseEntity<>("Article category not found", HttpStatus.BAD_REQUEST);
+        }else{
+            System.out.println("Category id->"+itemCategoriesRepository.findById(newCategoryId));
+        }
+
+        hr.techtitans.items.models.Item item = new hr.techtitans.items.models.Item();
+
+        item.setName((String) payload.get("name"));
+
+        item.setItemCategory(newCategoryId);
+        item.setDescription((String) payload.get("description"));
+        item.setPrice((Double) payload.get("price"));
+        item.setQuantity_in_stock((Integer) payload.get("quantity_in_stock"));
+        item.setWeight((Double) payload.get("weight"));
+        item.setBrand((String) payload.get("brand"));
+        item.setCurrency((String) payload.get("currency"));
+
+        itemRepository.insert(item);
+        return new ResponseEntity<>("New article created successfully", HttpStatus.CREATED);
+    }
 }
 
