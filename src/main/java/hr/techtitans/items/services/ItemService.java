@@ -213,12 +213,12 @@ public class ItemService {
             return new ResponseEntity<>("Article name is mandatory", HttpStatus.BAD_REQUEST);
         }
 
-        String category = (String) payload.get("category");
+        String category = (String) payload.get("itemCategory");
         if (category == null || category.trim().isEmpty()) {
             return new ResponseEntity<>("Article category is mandatory", HttpStatus.BAD_REQUEST);
         }
 
-        String categoryId = (String) payload.get("category");
+        String categoryId = (String) payload.get("itemCategory");
         ObjectId newCategoryId = new ObjectId(categoryId);
 
 
@@ -235,6 +235,7 @@ public class ItemService {
 
         item.setItemCategory(newCategoryId);
         item.setDescription((String) payload.get("description"));
+        item.setMaterial((String) payload.get("material"));
         item.setPrice((Double) payload.get("price"));
         item.setQuantity_in_stock((Integer) payload.get("quantity_in_stock"));
         item.setWeight((Double) payload.get("weight"));
