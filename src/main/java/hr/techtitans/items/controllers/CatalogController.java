@@ -3,6 +3,7 @@ package hr.techtitans.items.controllers;
 
 import hr.techtitans.items.dtos.CatalogDto;
 import hr.techtitans.items.dtos.ItemDto;
+import hr.techtitans.items.models.Catalog;
 import hr.techtitans.items.services.CatalogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -59,6 +60,17 @@ public class CatalogController {
             return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @PostMapping("/search")
+    public ResponseEntity<?> searchCatalogs(@RequestBody Map<String, Object> payload) {
+        try {
+            List<CatalogDto> catalogDtoList = catalogService.searchCatalogs(payload);
+            return new ResponseEntity<>(catalogDtoList, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     @GetMapping("/{catalogId}")
     public ResponseEntity<?> getCatalogById(@PathVariable String catalogId, @RequestHeader("Authorization") String token){

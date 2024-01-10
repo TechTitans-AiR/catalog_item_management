@@ -8,4 +8,11 @@ import java.util.List;
 
 public interface CatalogRepository extends MongoRepository<Catalog, ObjectId> {
     List<Catalog> findByUsersContains(ObjectId userId);
+    List<Catalog> findByNameContainingIgnoreCase(String name);
+
+    List<Catalog> findByArticlesContaining(ObjectId articleId);
+
+    List<Catalog> findByServicesContaining(ObjectId serviceId);
+
+
 }
