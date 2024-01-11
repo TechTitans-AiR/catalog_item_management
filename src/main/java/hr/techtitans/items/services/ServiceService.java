@@ -1,6 +1,7 @@
 package hr.techtitans.items.services;
 
 
+import hr.techtitans.items.controllers.UnauthorizedException;
 import hr.techtitans.items.dtos.ItemDto;
 import hr.techtitans.items.dtos.ServiceDto;
 import hr.techtitans.items.models.Catalog;
@@ -8,6 +9,7 @@ import hr.techtitans.items.models.Item;
 import hr.techtitans.items.models.ItemCategories;
 import hr.techtitans.items.models.Service;
 
+import hr.techtitans.items.repositories.CatalogRepository;
 import hr.techtitans.items.repositories.ServiceRepository;
 import org.bson.types.ObjectId;
 import org.json.JSONObject;
@@ -26,6 +28,8 @@ public class ServiceService {
 
     @Autowired
     private ServiceRepository serviceRepository;
+    @Autowired
+    private CatalogRepository catalogRepository;
 
 
     public ResponseEntity<Object> checkAdminRole(String token) {
@@ -234,6 +238,59 @@ public class ServiceService {
             e.printStackTrace();
             Map<String, Object> responseBody = Map.of("message", "An error occurred");
             return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    public String getUserIdFromToken(String token) {
+        try {
+            String[] tokenParts = token.split("\\.");
+
+            if (tokenParts.length != 3) {
+                System.out.println("Invalid token format");
+                System.out.println(tokenParts.length);
+                return null;
+            }
+
+            String payload = tokenParts[1];
+
+            byte[] decodedPayload = java.util.Base64.getUrlDecoder().decode(payload);
+            String decodedPayloadString = new String(decodedPayload, StandardCharsets.UTF_8);
+
+            JSONObject payloadJson = new JSONObject(decodedPayloadString);
+
+            String userIdFromToken = payloadJson.getString("userId");
+
+            System.out.println("userIdFromToken from Token: " + userIdFromToken);
+            System.out.println(payloadJson);
+
+            return userIdFromToken;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public List<ServiceDto> getServicesByUserId(String userId, String token) {
+        try {
+            String loggedInUserId = getUserIdFromToken(token);
+
+            if (!loggedInUserId.equals(userId)) {
+                throw new UnauthorizedException("Access denied. You can only retrieve services from your catalogs.");
+            }
+
+            List<Catalog> catalogs = catalogRepository.findByUsersContains(new ObjectId(userId));
+
+            Set<ObjectId> serviceIds = catalogs.stream()
+                    .flatMap(catalog -> catalog.getServices().stream())
+                    .collect(Collectors.toSet());
+
+            List<Service> uniqueServices = serviceRepository.findByIdIn(new ArrayList<>(serviceIds));
+
+            return uniqueServices.stream()
+                    .map(this::mapToServiceDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
         }
     }
 }

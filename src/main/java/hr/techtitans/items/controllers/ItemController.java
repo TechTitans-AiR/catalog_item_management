@@ -89,4 +89,22 @@ public class ItemController {
     public ResponseEntity<Object> createItem(@RequestBody Map<String, Object> payload, @RequestHeader("Authorization") String token){
         return new ResponseEntity<>(itemService.createItem(payload, token), HttpStatus.CREATED);
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getItemsByUser(@PathVariable String userId, @RequestHeader("Authorization") String token) {
+        try {
+            List<ItemDto> itemsDto = itemService.getItemsByUserId(userId, token);
+
+            if (!itemsDto.isEmpty()) {
+                return new ResponseEntity<>(itemsDto, HttpStatus.OK);
+            } else {
+                String errorMessage = "No items found for user with ID: " + userId;
+                return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+            }
+        } catch (UnauthorizedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

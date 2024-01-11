@@ -88,4 +88,22 @@ public class ServiceController {
         Map<String, Object> responseBody = Map.of("message", "Please provide an service ID");
         return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getServicesByUser(@PathVariable String userId, @RequestHeader("Authorization") String token) {
+        try {
+            List<ServiceDto> servicesDto = serviceService.getServicesByUserId(userId, token);
+
+            if (!servicesDto.isEmpty()) {
+                return new ResponseEntity<>(servicesDto, HttpStatus.OK);
+            } else {
+                String errorMessage = "No services found for user with ID: " + userId;
+                return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+            }
+        } catch (UnauthorizedException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

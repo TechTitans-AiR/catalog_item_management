@@ -2,10 +2,13 @@ package hr.techtitans.items.services;
 
 
 
+import hr.techtitans.items.controllers.UnauthorizedException;
 import hr.techtitans.items.dtos.ItemDto;
+import hr.techtitans.items.models.Catalog;
 import hr.techtitans.items.models.Item;
 import hr.techtitans.items.models.ItemCategories;
 import hr.techtitans.items.repositories.ItemRepository;
+import hr.techtitans.items.repositories.CatalogRepository;
 import hr.techtitans.items.repositories.ItemCategoriesRepository;
 import org.bson.types.ObjectId;
 import org.json.JSONObject;
@@ -23,6 +26,8 @@ public class ItemService {
 
     @Autowired
     private ItemRepository itemRepository;
+    @Autowired
+    private CatalogRepository catalogRepository;
 
 
     @Autowired
@@ -263,6 +268,59 @@ public class ItemService {
 
         itemRepository.insert(item);
         return new ResponseEntity<>("New article created successfully", HttpStatus.CREATED);
+    }
+    public String getUserIdFromToken(String token) {
+        try {
+            String[] tokenParts = token.split("\\.");
+
+            if (tokenParts.length != 3) {
+                System.out.println("Invalid token format");
+                System.out.println(tokenParts.length);
+                return null;
+            }
+
+            String payload = tokenParts[1];
+
+            byte[] decodedPayload = java.util.Base64.getUrlDecoder().decode(payload);
+            String decodedPayloadString = new String(decodedPayload, StandardCharsets.UTF_8);
+
+            JSONObject payloadJson = new JSONObject(decodedPayloadString);
+
+            String userIdFromToken = payloadJson.getString("userId");
+
+            System.out.println("userIdFromToken from Token: " + userIdFromToken);
+            System.out.println(payloadJson);
+
+            return userIdFromToken;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public List<ItemDto> getItemsByUserId(String userId, String token) {
+        try {
+            String loggedInUserId = getUserIdFromToken(token);
+
+            if (!loggedInUserId.equals(userId)) {
+                throw new UnauthorizedException("Access denied. You can only retrieve items from your catalogs.");
+            }
+
+            List<Catalog> catalogs = catalogRepository.findByUsersContains(new ObjectId(userId));
+
+            Set<ObjectId> itemIds = catalogs.stream()
+                    .flatMap(catalog -> catalog.getArticles().stream())
+                    .collect(Collectors.toSet());
+
+            List<Item> uniqueItems = itemRepository.findByIdIn(new ArrayList<>(itemIds));
+
+            return uniqueItems.stream()
+                    .map(this::mapToItemDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
     }
 }
 
