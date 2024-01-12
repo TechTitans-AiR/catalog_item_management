@@ -12,8 +12,7 @@ import org.bson.types.ObjectId;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -23,6 +22,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class CatalogService {
@@ -364,7 +364,7 @@ public class CatalogService {
                 List<ObjectId> updatedUsers = updatedCatalogDto.getUsers();
                 if (updatedUsers != null && !updatedUsers.isEmpty()) {
                     for (ObjectId userId : updatedUsers) {
-                        if (!userExists(userId)) {
+                        if (!userExists(userId,token)) {
                             return new ResponseEntity<>("User with id: " + userId + " does not exist.", HttpStatus.BAD_REQUEST);
                         }
                     }
@@ -458,10 +458,22 @@ public class CatalogService {
         }
     }
 
-    private boolean userExists(ObjectId userId) {
+    private boolean userExists(ObjectId userId, String token) {
         try {
+            String apiUrl = UriComponentsBuilder.fromUriString(userApiUrl)
+                    .pathSegment(String.valueOf(userId))
+                    .build()
+                    .toUriString();
+
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<String> response = restTemplate.getForEntity(userApiUrl + "/" + userId, String.class);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Content-Type", "application/json");
+            headers.set("Authorization", "Bearer " + token);
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 return true;
@@ -476,6 +488,7 @@ public class CatalogService {
             return false;
         }
     }
+
 
     private boolean itemExists(ObjectId itemId) {
         try {
